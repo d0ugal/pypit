@@ -19,13 +19,10 @@ class Runner(object):
         all_challenges = [C(package_release) for C in challenge_classes]
 
         for challenge in all_challenges:
-            if hasattr(challenge, 'setup'):
-                challenge.setup()
+            challenge.setup()
 
         for challenge in all_challenges:
-            if hasattr(challenge, 'run'):
-                challenge.setup()
+            challenge.run()
 
         for challenge in all_challenges:
-            if hasattr(challenge, 'finish'):
-                challenge.setup()
+            challenge.finish()
