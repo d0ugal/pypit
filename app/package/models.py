@@ -2,25 +2,27 @@ from app import db
 
 
 class Package(db.Model):
-
-    __tablename__ = 'package_package'
-
     id = db.Column(db.Integer, primary_key=True)
-    pypi_name = db.Column(db.String(50), unique=True)
+    pypi_name = db.Column(db.String(30))
+    releases = db.relationship('Release', backref='package', lazy='dynamic')
 
 
 class Release(db.Model):
-
-    __tablename__ = 'package_release'
-
     id = db.Column(db.Integer, primary_key=True)
-    package = db.relationship('Package', backref='release', lazy='select')
+    package_id = db.Column(db.Integer, db.ForeignKey('package.id'))
 
-    """
+
+"""
+    __tablename__ = 'package_release'
+    id = db.Column(db.Integer, primary_key=True)
+    package_id = db.Column(None, db.ForeignKey('package_package.id'))
+    package = db.relation(Package, primaryjoin=(package_id==Package.id),
+                 backref=db.backref('buys', order_by=id))
+
+
     The following fields are copied verbatim from the PyPI JSON package
     output. For example http://pypi.python.org/pypi/pip/json . We may not want
     everything, so this can be revisited later. Some of it seems useless.
-    """
     maintainer = db.Column(db.String(30))
     docs_url = db.Column(db.String(200))
     requires_python = db.Column(db.Boolean)
@@ -46,3 +48,4 @@ class Release(db.Model):
     home_page = db.Column(db.String(75))
     stable_version = db.Column(db.String(10))
     cheesecake_installability_id = db.Column(db.String(10))
+"""
