@@ -3,7 +3,8 @@ from lxml import etree
 from requests import get
 from StringIO import StringIO
 
-from app import app, db, celery
+from app import app, db
+from app.celery import celery
 from package.models import Package, Release
 
 

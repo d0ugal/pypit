@@ -1,6 +1,5 @@
 from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
-from flask.ext.celery import Celery
 
 
 def create_app():
@@ -9,7 +8,6 @@ def create_app():
 app = create_app()
 app.config.from_pyfile('config.py')
 
-celery = Celery(app)
 db = SQLAlchemy(app)
 
 

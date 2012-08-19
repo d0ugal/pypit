@@ -1,8 +1,6 @@
 Flask==0.9
-Flask-Celery==2.4.3
 Flask-SQLAlchemy==0.16
 Flask-Script==0.3.3
-Flask-WTF==0.8
 Jinja2==2.6
 SQLAlchemy==0.7.8
 WTForms==1.0.1
@@ -18,5 +16,6 @@ lxml==2.3.5
 ordereddict==1.1
 psycopg2==2.4.5
 python-dateutil==1.5
+redis==2.6.2
 requests==0.13.6
 wsgiref==0.1.2
