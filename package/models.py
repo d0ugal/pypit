@@ -1,28 +1,23 @@
+from sqlalchemy.dialects.postgresql import ARRAY
+
 from app import db
 
 
 class Package(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    pypi_name = db.Column(db.String(30))
-    releases = db.relationship('Release', backref='package', lazy='dynamic')
+    pypi_name = db.Column(db.String(30), unique=True)
 
 
 class Release(db.Model):
+
     id = db.Column(db.Integer, primary_key=True)
     package_id = db.Column(db.Integer, db.ForeignKey('package.id'))
+    package = db.relation(Package, primaryjoin=(package_id == Package.id),
+                 backref=db.backref('packages', order_by=id))
 
-
-"""
-    __tablename__ = 'package_release'
-    id = db.Column(db.Integer, primary_key=True)
-    package_id = db.Column(None, db.ForeignKey('package_package.id'))
-    package = db.relation(Package, primaryjoin=(package_id==Package.id),
-                 backref=db.backref('buys', order_by=id))
-
-
-    The following fields are copied verbatim from the PyPI JSON package
-    output. For example http://pypi.python.org/pypi/pip/json . We may not want
-    everything, so this can be revisited later. Some of it seems useless.
+    # The following fields are copied verbatim from the PyPI JSON package
+    #output. For example http://pypi.python.org/pypi/pip/json . We may not want
+    #everything, so this can be revisited later. Some of it seems useless.
     maintainer = db.Column(db.String(30))
     docs_url = db.Column(db.String(200))
     requires_python = db.Column(db.Boolean)
@@ -35,6 +30,7 @@ class Release(db.Model):
     download_url = db.Column(db.String(200))
     platform = db.Column(db.String(30))
     version = db.Column(db.String(10))
+    provides = db.Column(ARRAY(db.String(30)))
     cheesecake_documentation_id = db.Column(db.Integer)
     _pypi_hidden = db.Column(db.Boolean)
     description = db.Column(db.Text)
@@ -47,5 +43,5 @@ class Release(db.Model):
     summary = db.Column(db.Text)
     home_page = db.Column(db.String(75))
     stable_version = db.Column(db.String(10))
+    requires = db.Column(ARRAY(db.String(30)))
     cheesecake_installability_id = db.Column(db.String(10))
-"""
