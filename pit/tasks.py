@@ -1,6 +1,8 @@
+from datetime import datetime
 from dateutil.parser import parse
 from lxml import etree
 from requests import get
+from socket import error
 from StringIO import StringIO
 
 from app import app, db
@@ -35,7 +37,11 @@ def get_latest_packages():
         # information.
         # TODO: The following line could be more efficient as these gets could
         # be run in parallel
-        release_info = get(properties['link'] + "/json").json
+        try:
+            release_info = get(properties['link'] + "/json").json
+        except error:
+            print "FAILED; ", properties['link']
+            continue
 
         # remove the wrapping object in the JSON.
         release = release_info['info']
@@ -50,14 +56,18 @@ def get_latest_packages():
         package_model = Package.query.filter_by(pypi_name=release['name']).first()
 
         if not package_model:
-            package_model = Package(pypi_name=release['name'])
+            package_model = Package(pypi_name=release['name'], added=datetime.now())
             db.session.add(package_model)
+            # HACK: Commit at this point so we get the ID for the package
+            # model. I think there must be a better way to do this with
+            # SQLAlchemy.
+            db.session.commit()
 
         # Get the release model if it exists, if it doesn't create it.
         release_model = Release.query.filter_by(package_id=package_model.id, version=release['version']).first()
 
         if not release_model:
-            release_model = Release(package_id=package_model.id, **release)
+            release_model = Release(package_id=package_model.id, added=datetime.now(), **release)
             db.session.add(release_model)
 
             # Only add the release models that are created in this run.
