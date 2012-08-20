@@ -16,9 +16,13 @@ def createdb(drop=False):
 
 
 @manager.command
-def watchreleases():
+def watchreleases(inline=False):
 
-    from pit.tasks import get_latest_packages
+    from package.tasks import get_latest_packages
+
+    if not inline:
+        releases = get_latest_packages.delay()
+        return
 
     releases = get_latest_packages()
     print "Found %s new releases" % len(releases)
