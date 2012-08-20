@@ -7,7 +7,7 @@ from StringIO import StringIO
 
 from app import app, db
 from app.celery import celery
-from package.models import Package, Release
+from package.models import Package, Release, ReleaseUrl
 
 
 @celery.task(name="package.get_latest_packages", ignore_result=True)
@@ -45,6 +45,7 @@ def get_latest_packages():
 
         # remove the wrapping object in the JSON.
         release = release_info['info']
+        urls = release_info['urls']
 
         # Strip whitespace from string values, there seems to be quite a few
         # newlines dotted around the data that we don't want.
@@ -69,9 +70,17 @@ def get_latest_packages():
         if not release_model:
             release_model = Release(package_id=package_model.id, added=datetime.now(), **release)
             db.session.add(release_model)
+            # HACK: Commit at this point so we get the ID for the release
+            # model. I think there must be a better way to do this with
+            # SQLAlchemy.
+            db.session.commit()
 
             # Only add the release models that are created in this run.
             releases.append(release_model)
+
+            for url in urls:
+                url_model = ReleaseUrl(release_id=release_model.id, **url)
+                db.session.add(url_model)
 
     # Finally commit this transaction.
     db.session.commit()
