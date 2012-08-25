@@ -5,6 +5,17 @@
 <div class="hero-unit">
 	<h1>PyPit</h1>
 	<p>Which packages will emerge victorious?</p>
+
+    <ul>
+        {% for release in releases %}
+            <li>
+                <a href="{{ url_for('.package', package_name=release.package.name) }}">
+                    {{ release.package.name }} ({{ release.added }})
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+
 </div>
 
 {% endblock %}

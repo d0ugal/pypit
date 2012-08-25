@@ -54,10 +54,10 @@ def get_latest_packages():
                 release[k] = v.strip()
 
         # Get the package model if it exists, if it doesn't create it.
-        package_model = Package.query.filter_by(pypi_name=release['name']).first()
+        package_model = Package.query.filter_by(name=release['name']).first()
 
         if not package_model:
-            package_model = Package(pypi_name=release['name'], added=datetime.now())
+            package_model = Package(name=release['name'], added=datetime.now())
             db.session.add(package_model)
             # HACK: Commit at this point so we get the ID for the package
             # model. I think there must be a better way to do this with
