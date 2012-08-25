@@ -14,7 +14,7 @@ THREADS_PER_PAGE = 8
 CSRF_ENABLED = True
 CSRF_SESSION_KEY = ""
 
-PYPI_PACKAGES_RSS = 'http://pypi.python.org/pypi?%3Aaction=packages_rss'
+PYPI_PACKAGES_RSS = 'http://pypi.python.org/pypi?%3Aaction=rss'
 
 try:
     from local_config import *
