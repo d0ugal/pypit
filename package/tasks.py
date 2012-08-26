@@ -5,7 +5,7 @@ from requests import get
 from socket import error as SocketError
 from StringIO import StringIO
 
-from app import app, db
+from app import app
 from app.celery import celery
 from app.util.db import get_or_create
 from package.models import Package, Release, ReleaseUrl
@@ -22,49 +22,48 @@ def get_latest_packages():
     response = get(app.config['PYPI_PACKAGES_RSS'])
     tree = etree.parse(StringIO(response.content))
 
-    releases = []
-
     for item in tree.xpath('channel/item'):
 
-        # TODO: Switch to the following line in Python 2.7+
-        #properties = {child.tag: child.xpath("string()") for child in item}
         properties = dict((child.tag, child.xpath("string()")) for child in item)
+        get_package.delay(properties)
 
-        # Convert the datestring to a datetime
-        properties['pubDate'] = parse(properties['pubDate'])
 
-        # Fetch the release information from PyPi. There is a risk here that
-        # a package could be pushed twice quickly and we get the same version
-        # information.
-        try:
-            release_info = get(properties['link'] + "/json").json
-        except SocketError:
-            print "FAILED; ", properties['link']
-            continue
+@celery.task(name="package.get_package", ignore_result=True)
+def get_package(properties):
 
-        # remove the wrapping object in the JSON.
-        release = release_info['info']
-        urls = release_info['urls']
+    # Convert the datestring to a datetime
+    properties['pubDate'] = parse(properties['pubDate'])
 
-        # Strip whitespace from string values, there seems to be quite a few
-        # newlines dotted around the data that we don't want.
-        for k, v in release.items():
-            if isinstance(v, basestring):
-                release[k] = v.strip()
+    # Fetch the release information from PyPi. There is a risk here that
+    # a package could be pushed twice quickly and we get the same version
+    # information.
+    try:
+        release_info = get(properties['link'] + "/json").json
+    except SocketError:
+        print "FAILED; ", properties['link']
+        return
 
-        # Create the Package and Realse models if we don't already have them.
-        package_model, _ = get_or_create(Package, name=release['name'],
-            defaults={'added': datetime.now()})
+    # remove the wrapping object in the JSON.
+    release = release_info['info']
+    urls = release_info['urls']
 
-        release['added'] = datetime.now()
-        release_model, release_created = get_or_create(Release, package_id=package_model.id,
-            version=release['version'], defaults=release)
+    # Strip whitespace from string values, there seems to be quite a few
+    # newlines dotted around the data that we don't want.
+    for k, v in release.items():
+        if isinstance(v, basestring):
+            release[k] = v.strip()
 
-        if release_created:
+    # Create the Package and Realse models if we don't already have them.
+    package_model, _ = get_or_create(Package, name=release['name'],
+        defaults={'added': datetime.now()})
 
-            releases.append(release_model)
+    release['added'] = datetime.now()
+    release_model, release_created = get_or_create(Release, package_id=package_model.id,
+        version=release['version'], defaults=release)
 
-            for url in urls:
-                get_or_create(ReleaseUrl, release_id=release_model.id, **url)
+    if release_created:
 
-    return releases
+        for url in urls:
+            get_or_create(ReleaseUrl, release_id=release_model.id, **url)
+
+    return release, release_created

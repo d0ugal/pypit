@@ -16,19 +16,10 @@ def createdb(drop=False):
 
 
 @manager.command
-def watchreleases(inline=False):
+def watchreleases():
 
     from package.tasks import get_latest_packages
-
-    if not inline:
-        releases = get_latest_packages.delay()
-        return
-
-    releases = get_latest_packages()
-    print "Found %s new releases" % len(releases)
-
-    for release in releases:
-        print ' -> %s (%s)' % (release.name, release.version)
+    get_latest_packages.delay()
 
 if __name__ == "__main__":
     manager.run()
