@@ -6,8 +6,12 @@
 	<h1>PyPit</h1>
 	<p>Which packages will emerge victorious?</p>
 
+    <h2>Latest Packages</h2>
+
+    <p>Total packages <strong>{{ releases.count() }}</strong></p>
+
     <ul>
-        {% for release in releases %}
+        {% for release in releases.limit(20) %}
             <li>
                 <a href="{{ url_for('.package', package_name=release.package.name) }}">
                     <strong>{{ release.package.name }}</strong> ({{ release.version}})
