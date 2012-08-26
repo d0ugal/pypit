@@ -8,3 +8,7 @@ celery = Celery(broker='redis://localhost',
 celery.conf.update(
     CELERY_TASK_RESULT_EXPIRES=3600,
 )
+
+
+from package.tasks import *
+from pit.tasks import *
