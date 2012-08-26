@@ -2,11 +2,12 @@ from datetime import datetime
 from dateutil.parser import parse
 from lxml import etree
 from requests import get
-from socket import error
+from socket import error as SocketError
 from StringIO import StringIO
 
 from app import app, db
 from app.celery import celery
+from app.util.db import get_or_create
 from package.models import Package, Release, ReleaseUrl
 
 
@@ -35,11 +36,9 @@ def get_latest_packages():
         # Fetch the release information from PyPi. There is a risk here that
         # a package could be pushed twice quickly and we get the same version
         # information.
-        # TODO: The following line could be more efficient as these gets could
-        # be run in parallel
         try:
             release_info = get(properties['link'] + "/json").json
-        except error:
+        except SocketError:
             print "FAILED; ", properties['link']
             continue
 
@@ -53,36 +52,19 @@ def get_latest_packages():
             if isinstance(v, basestring):
                 release[k] = v.strip()
 
-        # Get the package model if it exists, if it doesn't create it.
-        package_model = Package.query.filter_by(name=release['name']).first()
+        # Create the Package and Realse models if we don't already have them.
+        package_model, _ = get_or_create(Package, name=release['name'],
+            defaults={'added': datetime.now()})
 
-        if not package_model:
-            package_model = Package(name=release['name'], added=datetime.now())
-            db.session.add(package_model)
-            # HACK: Commit at this point so we get the ID for the package
-            # model. I think there must be a better way to do this with
-            # SQLAlchemy.
-            db.session.commit()
+        release['added'] = datetime.now()
+        release_model, release_created = get_or_create(Release, package_id=package_model.id,
+            version=release['version'], defaults=release)
 
-        # Get the release model if it exists, if it doesn't create it.
-        release_model = Release.query.filter_by(package_id=package_model.id, version=release['version']).first()
+        if release_created:
 
-        if not release_model:
-            release_model = Release(package_id=package_model.id, added=datetime.now(), **release)
-            db.session.add(release_model)
-            # HACK: Commit at this point so we get the ID for the release
-            # model. I think there must be a better way to do this with
-            # SQLAlchemy.
-            db.session.commit()
-
-            # Only add the release models that are created in this run.
             releases.append(release_model)
 
             for url in urls:
-                url_model = ReleaseUrl(release_id=release_model.id, **url)
-                db.session.add(url_model)
-
-    # Finally commit this transaction.
-    db.session.commit()
+                get_or_create(ReleaseUrl, release_id=release_model.id, **url)
 
     return releases
