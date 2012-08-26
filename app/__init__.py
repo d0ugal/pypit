@@ -1,6 +1,6 @@
+from babel.dates import format_datetime
 from flask import Flask, render_template
 from flask.ext.sqlalchemy import SQLAlchemy
-from babel.dates import format_datetime
 
 
 def create_app():
