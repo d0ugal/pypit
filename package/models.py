@@ -16,6 +16,7 @@ class Release(db.Model):
     package = db.relation(Package, primaryjoin=(package_id == Package.id),
                  backref=db.backref('packages', order_by=id))
     added = db.Column(db.DateTime, nullable=False)
+    pub_date = db.Column(db.DateTime, nullable=False)
 
     # The following fields are copied verbatim from the PyPI JSON package
     #output. For example http://pypi.python.org/pypi/pip/json . We may not want

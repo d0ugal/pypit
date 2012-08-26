@@ -32,7 +32,7 @@ def get_latest_packages():
 def get_package(properties):
 
     # Convert the datestring to a datetime
-    properties['pubDate'] = parse(properties['pubDate'])
+    pub_date = parse(properties['pubDate'])
 
     # Fetch the release information from PyPi. There is a risk here that
     # a package could be pushed twice quickly and we get the same version
@@ -58,6 +58,7 @@ def get_package(properties):
         defaults={'added': datetime.now()})
 
     release['added'] = datetime.now()
+    release['pub_date'] = pub_date
     release_model, release_created = get_or_create(Release, package_id=package_model.id,
         version=release['version'], defaults=release)
 

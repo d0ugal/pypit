@@ -7,7 +7,7 @@ mod = Blueprint('base', __name__)
 @mod.route('/')
 def index():
 
-    latest = Release.query.order_by(Release.added).limit(20)
+    latest = Release.query.order_by(Release.pub_date.desc()).limit(20)
 
     return render_template('base/index.html', releases=latest)
 

@@ -10,7 +10,7 @@
         {% for release in releases %}
             <li>
                 <a href="{{ url_for('.package', package_name=release.package.name) }}">
-                    {{ release.package.name }} ({{ release.added }})
+                    <strong>{{ release.package.name }}</strong> ({{ release.version}})
                 </a>
             </li>
         {% endfor %}
