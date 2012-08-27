@@ -32,7 +32,7 @@ class Release(db.Model):
     author_email = db.Column(db.String(100))
     download_url = db.Column(db.String(300))
     platform = db.Column(db.String(100))
-    version = db.Column(db.String(20))
+    version = db.Column(db.String(30))
     provides = db.Column(ARRAY(db.String(30)))
     cheesecake_documentation_id = db.Column(db.Integer)
     _pypi_hidden = db.Column(db.Boolean)
