@@ -2,8 +2,10 @@ from __future__ import absolute_import
 
 from celery import Celery
 from datetime import timedelta
+from os import environ
 
-celery = Celery(broker='redis://localhost',
+redis_url = environ.get('REDISTOGO_URL', 'redis://localhost')
+celery = Celery(broker=redis_url,
                 include=['pit.tasks'])
 
 CELERYBEAT_SCHEDULE = {

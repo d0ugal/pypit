@@ -14,7 +14,7 @@ billiard==2.7.3.12
 blinker==1.2
 celery==3.0.5
 docutils==0.9.1
-importlib==1.0.2
+gunicorn==0.14.6
 kombu==2.3.2
 lxml==2.3.5
 ordereddict==1.1

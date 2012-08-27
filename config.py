@@ -3,16 +3,16 @@ _basedir = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = False
 
-ADMINS = frozenset([''])
-SECRET_KEY = ''
+ADMINS = frozenset(['dougal85@gmail.com'])
+SECRET_KEY = os.environ.get('SECRET_KEY')
 
-SQLALCHEMY_DATABASE_URI = "postgresql://localhost/pypit"
+SQLALCHEMY_DATABASE_URI = os.environ.get('HEROKU_POSTGRESQL_VIOLET_URL')
 DATABASE_CONNECT_OPTIONS = {}
 
 THREADS_PER_PAGE = 8
 
 CSRF_ENABLED = True
-CSRF_SESSION_KEY = ""
+CSRF_SESSION_KEY = os.environ.get('CSRF_SESSION_KEY')
 
 PYPI_PACKAGES_RSS = 'http://pypi.python.org/pypi?%3Aaction=rss'
 

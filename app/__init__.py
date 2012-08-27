@@ -28,7 +28,6 @@ app.jinja_env.filters['datetime'] = format_datetime_filter
 app.jinja_env.filters['nl2br'] = nl2br
 app.jinja_env.filters['rst_to_html'] = rst_to_html
 
-
 from app import views
 app.register_blueprint(views.mod)
 

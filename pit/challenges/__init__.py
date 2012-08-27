@@ -3,14 +3,12 @@ from celery import Task
 
 class BaseChallenge(Task):
 
-    def __init__(self, release):
-        self.release = release
-
     def setup(self):
         pass
 
-    def run(self):
-        pass
+    def run(self, release):
+        self.release = release
+        self.package = release.package
 
     def finish(self):
         pass
