@@ -1,0 +1,20 @@
+{% extends "base/base.html" %}
+
+{% block content %}
+
+<div class="hero-unit">
+	<h1>PyPit</h1>
+	<p>Which packages will emerge victorious?</p>
+
+    {% for stat, values in stats.items() %}
+        <h3>{{ stat }}</h3>
+        <ul>
+            {% for value in values %}
+                <li>{{ value }}</li>
+            {% endfor %}
+        </ul>
+    {% endfor %}
+
+</div>
+
+{% endblock %}
