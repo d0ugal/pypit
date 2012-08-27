@@ -12,10 +12,12 @@ def index():
 
     latest = Release.query.filter(Release.pub_date != None).order_by(Release.pub_date.desc())
     package_count = Package.query.count()
+    release_count = Release.query.count()
 
     return render_template('base/index.html',
         releases=latest,
-        package_count=package_count
+        package_count=package_count,
+        release_count=release_count,
     )
 
 
