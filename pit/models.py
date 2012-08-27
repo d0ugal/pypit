@@ -16,6 +16,9 @@ class TestRun(db.Model):
 def on_release_commit(sender, changes):
     for model, change in changes:
         if isinstance(model, Release):
-            run_the_gauntlet.delay(model)
+            if model:
+                run_the_gauntlet.delay(model)
+            else:
+                print "False? %s" % model
 
 models_committed.connect(on_release_commit, sender=app)

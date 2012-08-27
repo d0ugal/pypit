@@ -4,6 +4,7 @@ from lxml import etree
 from requests import get
 from socket import error as SocketError
 from StringIO import StringIO
+from yolk.cli import CheeseShop, Yolk
 
 from app import app
 from app.celery import celery
@@ -14,33 +15,43 @@ from package.models import Package, Release, ReleaseUrl
 @celery.task(name="package.get_latest_packages", ignore_result=True)
 def get_latest_packages():
     """
-    Read the PyPI latest packages RSS and create package and release models
-    for each package found. Return a list release models containing only those
-    that were created in this run (i.e. the new releases).
+    Real the PyPI RSS feed for latest package releases. Create sub tasks to
+    fetch and process each release.
     """
 
     response = get(app.config['PYPI_PACKAGES_RSS'])
     tree = etree.parse(StringIO(response.content))
 
+    # This is a bit odd, we don't really care, but its easier in the logs if
+    # we go through the packages chronologically (in RSS the newest is first
+    # but we want the oldest first.)
     for item in reversed(list(tree.xpath('channel/item'))):
 
+        # Convert into simple dict.
         properties = dict((child.tag, unicode(child.xpath("string()"))) for child in item)
-        get_package.delay(properties)
+        # Convert the datestring to a datetime and create the json url.
+        pub_date = parse(properties['pubDate'])
+        package_url = properties['link'] + "/json"
+        # trigger sub task.
+        get_package.delay(package_url, pub_date)
 
 
 @celery.task(name="package.get_package", ignore_result=True)
-def get_package(properties):
+def get_package(package_url, pub_date=None):
+    """
+    Given a release url download it and create the package and release models
+    as required. If we create the package for the first time trigger a sub
+    task to find old versions and fetch those.
 
-    # Convert the datestring to a datetime
-    pub_date = parse(properties['pubDate'])
+    The passed in pub_date is a bit weird, its a leftover relic from RSS. We
+    only have the date if we are adding from RSS, if its an old version we
+    don't know it.
+    """
 
-    # Fetch the release information from PyPi. There is a risk here that
-    # a package could be pushed twice quickly and we get the same version
-    # information.
     try:
-        release_info = get(properties['link'] + "/json").json
+        release_info = get(package_url).json
     except SocketError:
-        print "FAILED; ", properties['link']
+        print "FAILED; ", package_url
         return
 
     # remove the wrapping object in the JSON.
@@ -54,17 +65,42 @@ def get_package(properties):
             release[k] = v.strip()
 
     # Create the Package and Realse models if we don't already have them.
-    package_model, _ = get_or_create(Package, name=release['name'],
+    package_model, package_created = get_or_create(Package, name=release['name'],
         defaults={'added': datetime.now()})
+
+    # If we just created the package then go and get its old versions...
+    if package_created:
+        backdate_versions.delay(release['name'], release['version'])
 
     release['added'] = datetime.now()
     release['pub_date'] = pub_date
     release_model, release_created = get_or_create(Release, package_id=package_model.id,
         version=release['version'], defaults=release)
 
+    # store each url in the realse
     if release_created:
 
         for url in urls:
             get_or_create(ReleaseUrl, release_id=release_model.id, **url)
 
     return release, release_created
+
+
+@celery.task(name="package.backdate_versions", ignore_result=True)
+def backdate_versions(package_name, skip_version):
+    """
+    Using some hacky code to use Yolk for what its not designed, get all the
+    versions for a package and skip the current one we found in the RSS (we
+    are already looking into that). Create sub task to get the old releases.
+    """
+    y = Yolk()
+    y.pkg_spec = [package_name]
+    y.pypi = CheeseShop(True)
+    _, _, versions = y.parse_pkg_ver(False)
+
+    if skip_version in versions:
+        versions.remove(skip_version)
+
+    for version in versions:
+        package_url = "pypi.python.org/pypi/%s/%s/json" % (package_name, version)
+        get_package.delay(package_url)
