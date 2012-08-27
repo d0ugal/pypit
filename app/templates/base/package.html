@@ -7,7 +7,18 @@
 	<p>Which packages will emerge victorious?</p>
 
     <h2>{{ package.name }}</h2>
+    <p>{{ package.description }}</p>
     <p>First seen: {{ package.added|datetime }}</p>
+
+    <ul>
+        {% for release in releases %}
+            <li>
+                <a href="{{ url_for('.release', package_name=package.name, version=release.version) }}">
+                    {{ release.version }}
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
 
 </div>
 

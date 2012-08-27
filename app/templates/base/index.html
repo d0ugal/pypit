@@ -8,7 +8,10 @@
 
     <h2>Latest Packages</h2>
 
-    <p>Total packages <strong>{{ releases.count() }}</strong></p>
+    <p>
+        Total releases: <strong>{{ releases.count() }}</strong><br/>
+        Total packages: <strong>{{ package_count }}</strong>
+    </p>
 
     <ul>
         {% for release in releases.limit(20) %}
