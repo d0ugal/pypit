@@ -102,5 +102,5 @@ def backdate_versions(package_name, skip_version):
         versions.remove(skip_version)
 
     for version in versions:
-        package_url = "pypi.python.org/pypi/%s/%s/json" % (package_name, version)
+        package_url = "http://pypi.python.org/pypi/%s/%s/json" % (package_name, version)
         get_package.delay(package_url)
