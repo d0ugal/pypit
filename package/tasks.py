@@ -22,9 +22,9 @@ def get_latest_packages():
     response = get(app.config['PYPI_PACKAGES_RSS'])
     tree = etree.parse(StringIO(response.content))
 
-    for item in tree.xpath('channel/item'):
+    for item in reversed(list(tree.xpath('channel/item'))):
 
-        properties = dict((child.tag, child.xpath("string()")) for child in item)
+        properties = dict((child.tag, unicode(child.xpath("string()"))) for child in item)
         get_package.delay(properties)
 
 
