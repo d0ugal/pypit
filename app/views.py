@@ -10,7 +10,7 @@ mod = Blueprint('base', __name__)
 @mod.route('/')
 def index():
 
-    latest = Release.query.order_by(Release.pub_date.desc())
+    latest = Release.query.filter(Release.pub_date != None).order_by(Release.pub_date.desc())
     package_count = Package.query.count()
 
     return render_template('base/index.html',
