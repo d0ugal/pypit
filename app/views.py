@@ -60,8 +60,8 @@ def stats():
         .limit(10)
 
     stats = {
-        "Most Releases": ["%s: %s" % (k.name, v) for k, v in most_releases],
-        "Most Ative Author": ["%s: %s" % (k, v) for k, v in active_author],
+        "Packages with most releases": ["%s: %s" % (k.name, v) for k, v in most_releases],
+        "Most Frequent Author Name": ["%s: %s" % (k, v) for k, v in active_author],
     }
 
     return render_template('base/stats.html',
