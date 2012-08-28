@@ -87,7 +87,7 @@ def get_package(package_url, pub_date=None):
 
 
 @celery.task(name="package.backdate_versions", ignore_result=True)
-def backdate_versions(package_name, skip_version):
+def backdate_versions(package_name, skip_version=None):
     """
     Using some hacky code to use Yolk for what its not designed, get all the
     versions for a package and skip the current one we found in the RSS (we
@@ -98,9 +98,42 @@ def backdate_versions(package_name, skip_version):
     y.pypi = CheeseShop(True)
     _, _, versions = y.parse_pkg_ver(False)
 
-    if skip_version in versions:
+    if skip_version and skip_version in versions:
         versions.remove(skip_version)
 
     for version in versions:
         package_url = "http://pypi.python.org/pypi/%s/%s/json" % (package_name, version)
         get_package.delay(package_url)
+
+
+@celery.task(name="package.add_package", ignore_result=True)
+def add_package(package_name):
+
+    response = get("http://pypi.python.org/pypi/%s/json" % package_name)
+
+    # If we don't get JSON back it means its a registered name with no
+    # releases. So just stop
+    if not response.json:
+        return
+
+    version = response.json['info']['version']
+
+    package_url = "http://pypi.python.org/pypi/%s/%s/json" % (package_name, version)
+    get_package.delay(package_url)
+
+    backdate_versions.delay(package_name, version)
+
+
+@celery.task(name="package.load_all_pypi_packages", ignore_result=True)
+def load_all_pypi_packages():
+    """
+    Get all of the packages from pypi and run the backdate task on them. This
+    will create a huge number of tasks.
+    """
+
+    response = get("http://pypi.python.org/simple/")
+    tree = etree.parse(StringIO(response.content))
+
+    for anchor in tree.xpath("body/a"):
+        package_name = anchor.xpath("string()")
+        add_package.delay(package_name)
