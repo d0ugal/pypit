@@ -23,15 +23,15 @@ class Release(db.Model):
     #everything, so this can be revisited later. Some of it seems useless.
     maintainer = db.Column(db.String(200))
     docs_url = db.Column(db.String(300))
-    requires_python = db.Column(db.Boolean)
+    requires_python = db.Column(db.String(100))
     maintainer_email = db.Column(db.String(200))
     cheesecake_code_kwalitee_id = db.Column(db.Integer)
     keywords = db.Column(db.Text)
     package_url = db.Column(db.String(300))
-    author = db.Column(db.String(200))
+    author = db.Column(db.String(400))
     author_email = db.Column(db.String(200))
     download_url = db.Column(db.String(300))
-    platform = db.Column(db.String(200))
+    platform = db.Column(db.String(400))
     version = db.Column(db.String(200))
     provides = db.Column(ARRAY(db.String(200)))
     cheesecake_documentation_id = db.Column(db.Integer)
@@ -48,6 +48,10 @@ class Release(db.Model):
     stable_version = db.Column(db.String(200))
     requires = db.Column(ARRAY(db.String(200)))
     cheesecake_installability_id = db.Column(db.String(200))
+    obsoletes = db.String(100)
+    project_url = db.Column(db.String(300))
+    requires_dist = db.String(100)
+    requires_external = db.String(100)
 
 
 class ReleaseUrl(db.Model):
@@ -64,6 +68,6 @@ class ReleaseUrl(db.Model):
     url = db.Column(db.String(300))
     md5_digest = db.Column(db.String(32))
     downloads = db.Column(db.Integer)
-    filename = db.Column(db.String(100))
+    filename = db.Column(db.String(300))
     packagetype = db.Column(db.String(20))
     size = db.Column(db.Integer)

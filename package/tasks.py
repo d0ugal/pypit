@@ -4,6 +4,7 @@ from lxml import etree
 from requests import get
 from socket import error as SocketError
 from StringIO import StringIO
+from urllib2 import URLError
 from yolk.cli import CheeseShop, Yolk
 
 from app import app
@@ -19,7 +20,11 @@ def get_latest_packages():
     fetch and process each release.
     """
 
-    response = get(app.config['PYPI_PACKAGES_RSS'])
+    try:
+        response = get(app.config['PYPI_PACKAGES_RSS'])
+    except SocketError, e:
+        raise get_latest_packages.retry(exc=e)
+
     tree = etree.parse(StringIO(response.content))
 
     # This is a bit odd, we don't really care, but its easier in the logs if
@@ -50,9 +55,8 @@ def get_package(package_url, pub_date=None):
 
     try:
         release_info = get(package_url).json
-    except SocketError:
-        print "FAILED; ", package_url
-        return
+    except SocketError, e:
+        raise get_package.retry(exc=e)
 
     # remove the wrapping object in the JSON.
     release = release_info['info']
@@ -86,7 +90,7 @@ def get_package(package_url, pub_date=None):
     return release, release_created
 
 
-@celery.task(name="package.backdate_versions", ignore_result=True)
+@celery.task(name="package.backdate_versions", ignore_result=True, default_retry_delay=60)
 def backdate_versions(package_name, skip_version=None):
     """
     Using some hacky code to use Yolk for what its not designed, get all the
@@ -96,12 +100,25 @@ def backdate_versions(package_name, skip_version=None):
     y = Yolk()
     y.pkg_spec = [package_name]
     y.pypi = CheeseShop(True)
-    _, _, versions = y.parse_pkg_ver(False)
+    try:
+        _, _, versions = y.parse_pkg_ver(False)
+    except URLError, e:
+        raise backdate_versions.retry(exc=e)
 
     if skip_version and skip_version in versions:
         versions.remove(skip_version)
 
+    package = Package.query.filter_by(name=package_name).one()
+
     for version in versions:
+
+        # Check we don't already have this version stored.
+        q = Release.query
+        count = q.filter_by(package_id=package.id, version=version).count()
+
+        if count > 0:
+            continue
+
         package_url = "http://pypi.python.org/pypi/%s/%s/json" % (package_name, version)
         get_package.delay(package_url)
 
@@ -109,19 +126,27 @@ def backdate_versions(package_name, skip_version=None):
 @celery.task(name="package.add_package", ignore_result=True)
 def add_package(package_name):
 
-    response = get("http://pypi.python.org/pypi/%s/json" % package_name)
+    # Check we don't already have this package. If we do nothing needs done.
+    if Package.query.filter_by(name="Django").count() > 0:
+        return
+
+    url = "http://pypi.python.org/pypi/%s/json" % package_name
+
+    try:
+        response = get(url)
+    except SocketError, e:
+        raise add_package.retry(exc=e)
 
     # If we don't get JSON back it means its a registered name with no
-    # releases. So just stop
+    # releases. So just store the package name and stop.
     if not response.json:
+        get_or_create(Package, name=package_name, defaults={'added': datetime.now()})
         return
 
     version = response.json['info']['version']
 
     package_url = "http://pypi.python.org/pypi/%s/%s/json" % (package_name, version)
     get_package.delay(package_url)
-
-    backdate_versions.delay(package_name, version)
 
 
 @celery.task(name="package.load_all_pypi_packages", ignore_result=True)
@@ -131,9 +156,13 @@ def load_all_pypi_packages():
     will create a huge number of tasks.
     """
 
-    response = get("http://pypi.python.org/simple/")
+    try:
+        response = get("http://pypi.python.org/simple/")
+    except SocketError, e:
+        raise load_all_pypi_packages.retry(exc=e)
+
     tree = etree.parse(StringIO(response.content))
 
     for anchor in tree.xpath("body/a"):
         package_name = anchor.xpath("string()")
-        add_package.delay(package_name)
+        add_package.delay(unicode(package_name))

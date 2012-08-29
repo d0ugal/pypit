@@ -53,17 +53,31 @@ def stats():
         .join(Release)\
         .group_by(Package.name, Package.id)\
         .order_by("total DESC")\
-        .limit(10)
+        .limit(20)
 
     total = func.count(Release.author).label('total')
     active_author = db.session.query(Release.author, total)\
         .group_by(Release.author)\
         .order_by("total DESC")\
-        .limit(10)
+        .limit(20)
+
+    total = func.count(Release.license).label('total')
+    most_used_license = db.session.query(Release.license, total)\
+        .group_by(Release.license)\
+        .order_by("total DESC")\
+        .limit(20)
+
+    total = func.count(Release.platform).label('total')
+    most_used_platform = db.session.query(Release.platform, total)\
+        .group_by(Release.platform)\
+        .order_by("total DESC")\
+        .limit(20)
 
     stats = {
         "Packages with most releases": ["%s: %s" % (k.name, v) for k, v in most_releases],
         "Most Frequent Author Name": ["%s: %s" % (k, v) for k, v in active_author],
+        "Most Used Licence": ["%s: %s" % (k, v) for k, v in most_used_license],
+        "Most Common Platform": ["%s: %s" % (k, v) for k, v in most_used_platform],
     }
 
     return render_template('base/stats.html',
