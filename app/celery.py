@@ -4,7 +4,7 @@ from celery import Celery
 from datetime import timedelta
 from os import environ
 
-broker_url = 'sqla+%s' % environ.get('HEROKU_POSTGRESQL_GOLD_URL')
+broker_url = 'sqla+%s' % environ.get('DATABASE_URL')
 celery = Celery(broker=broker_url,
                 include=['pit.tasks'])
 
