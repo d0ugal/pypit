@@ -4,8 +4,8 @@ from celery import Celery
 from datetime import timedelta
 from os import environ
 
-redis_url = environ.get('REDISTOGO_URL', 'redis://localhost')
-celery = Celery(broker=redis_url,
+broker_url = 'sqla+%s' % environ.get('HEROKU_POSTGRESQL_GOLD_URL')
+celery = Celery(broker=broker_url,
                 include=['pit.tasks'])
 
 CELERYBEAT_SCHEDULE = {
