@@ -2,10 +2,9 @@ from __future__ import absolute_import
 
 from celery import Celery
 from datetime import timedelta
-from os import environ
 
-broker_url = 'sqla+%s' % environ.get('DATABASE_URL')
-celery = Celery(broker=broker_url,
+redis_url = 'redis://localhost'
+celery = Celery(broker=redis_url,
                 include=['pit.tasks'])
 
 CELERYBEAT_SCHEDULE = {

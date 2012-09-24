@@ -24,8 +24,8 @@ def add_package(name):
     Add a particular package to PyPit. Useful for local testing.
     """
 
-    from package.tasks import backdate_versions
-    backdate_versions.delay(name)
+    from package.tasks import add_package
+    add_package.delay(name)
 
 
 @manager.command
