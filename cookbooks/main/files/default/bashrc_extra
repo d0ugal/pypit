@@ -1,0 +1,11 @@
+# Wire up virtualenvwrapper completion and paths.
+source /usr/local/bin/virtualenvwrapper.sh
+
+# Setup the history to remove dupes, lines that start with a space.
+# Also, make the history HUGE.
+export HISTCONTROL=ignoreboth
+export HISTSIZE=50000
+export HISTIGNORE="[ ]*"
+
+# Handy alias to search the history. usage; hack <term>
+alias ack='ack-grep'

@@ -1,3 +1,5 @@
 local_config.py
 celerybeat-schedule.db
 .coverage
+.DS_Store
+.vagrant
