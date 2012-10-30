@@ -1,9 +1,9 @@
 #
-# Author:: Seth Chisamore <schisamo@opscode.com>
-# Cookbook Name:: python
-# Recipe:: default
+# Cookbook Name:: postgresql
+# Recipe:: ruby
 #
-# Copyright 2011, Opscode, Inc.
+# Author:: Joshua Timberman (<joshua@opscode.com>)
+# Copyright 2012 Opscode, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +18,19 @@
 # limitations under the License.
 #
 
-include_recipe "python::#{node['python']['install_method']}"
-include_recipe "python::pip"
-include_recipe "python::virtualenv"
+execute "apt-get update" do
+  ignore_failure true
+  action :nothing
+end.run_action(:run) if node['platform_family'] == "debian"
+
+node.set['build_essential']['compiletime'] = true
+include_recipe "build-essential"
+include_recipe "postgresql::client"
+
+node['postgresql']['client']['packages'].each do |pg_pack|
+
+  resources("package[#{pg_pack}]").run_action(:install)
+
+end
+
+chef_gem "pg"

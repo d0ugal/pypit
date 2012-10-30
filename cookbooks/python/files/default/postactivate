@@ -1,4 +1,0 @@
-alias dj='python manage.py'
-alias djr='dj runserver 0.0.0.0:8000'
-alias djs='dj shell'
-alias djt='dj test'

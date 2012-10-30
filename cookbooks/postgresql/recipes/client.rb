@@ -1,9 +1,10 @@
 #
-# Author:: Seth Chisamore <schisamo@opscode.com>
-# Cookbook Name:: python
-# Recipe:: default
+# Cookbook Name:: postgresql
+# Recipe:: client
 #
-# Copyright 2011, Opscode, Inc.
+# Author:: Joshua Timberman (<joshua@opscode.com>)
+# Author:: Lamont Granquist (<lamont@opscode.com>)
+# Copyright 2009-2011 Opscode, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -18,6 +19,8 @@
 # limitations under the License.
 #
 
-include_recipe "python::#{node['python']['install_method']}"
-include_recipe "python::pip"
-include_recipe "python::virtualenv"
+node['postgresql']['client']['packages'].each do |pg_pack|
+  package pg_pack do
+    action :install
+  end
+end
