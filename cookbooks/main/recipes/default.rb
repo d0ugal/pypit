@@ -13,24 +13,6 @@ end
   end
 end
 
-if node[:gis]
-  %w{binutils gdal-bin}.each do |pkg|
-    package pkg do
-    action :install
-    end
-  end
-end
-
-# On a project basis, allow a set of packages to be defined that will be
-# installed at almost the start of the setup process.
-if node.has_key?("system_packages")
-  node[:system_packages].each do |pkg|
-  package pkg do
-    action :install
-  end
-  end
-end
-
 if node.has_key?("user")
 
   user_info = node[:user]
@@ -66,20 +48,6 @@ if node.has_key?("user")
     owner user_info[:username]
     group user_info[:group]
     mode 0775
-  end
-
-
-  cookbook_file "/home/#{user_info[:username]}/.bashrc_extra" do
-    source "bashrc_extra"
-    mode 0640
-    owner user_info[:username]
-    group user_info[:group]
-    action :create_if_missing
-  end
-
-  execute "source-bachrc-extra" do
-    command "echo \"source /home/#{node[:user_name]}/.bashrc_extra\" >> /home/#{node[:user_name]}/.bashrc"
-    not_if "grep bashrc_extra /home/#{node[:user_name]}/.bashrc"
   end
 
 end
