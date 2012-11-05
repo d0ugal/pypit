@@ -20,16 +20,16 @@ directory node[:redis][:dir] do
   action :create
 end
 
-remote_file "/tmp/redis.tar.gz" do
+remote_file "#{Chef::Config[:file_cache_path]}/redis.tar.gz" do
   source node[:redis][:src_link]
   action :create_if_missing
 end
 
 bash "compile_redis_source" do
-  cwd "/tmp/"
+  cwd Chef::Config[:file_cache_path]
   code <<-EOH
-    tar zxf redis.tar.gz
-    cd antirez-redis-*
+    tar zxf #{Chef::Config[:file_cache_path]}/redis.tar.gz
+    cd redis-*
     make && make install
   EOH
   creates "/usr/local/bin/redis-server"
