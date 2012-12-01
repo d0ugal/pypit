@@ -8,7 +8,7 @@ def create_app():
         static_folder='app/static')
 
 app = create_app()
-app.config.from_pyfile('config.py')
+app.config.from_object('config')
 
 db = SQLAlchemy(app)
 

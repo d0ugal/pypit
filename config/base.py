@@ -15,8 +15,3 @@ CSRF_ENABLED = True
 CSRF_SESSION_KEY = os.environ.get('CSRF_SESSION_KEY')
 
 PYPI_PACKAGES_RSS = 'http://pypi.python.org/pypi?%3Aaction=rss'
-
-try:
-    from local_config import *
-except ImportError:
-    pass

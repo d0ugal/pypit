@@ -62,3 +62,7 @@ template "#{node[:postgresql][:dir]}/postgresql.conf" do
   mode 0600
   notifies :restart, resources(:service => "postgresql"), :immediately
 end
+
+execute "postgres-hstore-extension" do
+  command "sudo -u postgres -- psql -c \"CREATE EXTENSION IF NOT EXISTS hstore;\""
+end

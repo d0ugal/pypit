@@ -46,7 +46,7 @@ when "ubuntu"
 
   set[:postgresql][:dir] = "/etc/postgresql/#{node[:postgresql][:version]}/main"
   default['postgresql']['client']['packages'] = %w{postgresql-client libpq-dev}
-  default['postgresql']['server']['packages'] = %w{postgresql}
+  default['postgresql']['server']['packages'] = %w{postgresql postgresql-contrib}
 
 when "fedora"
 

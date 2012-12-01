@@ -39,3 +39,23 @@ bash "install-pip" do
   EOF
   not_if { ::File.exists?("#{pip_bindir}/pip") }
 end
+
+if node.has_key?("user")
+
+    user_info = node[:user]
+
+    directory "/home/#{user_info[:username]}/.pip/cache" do
+        owner user_info[:username]
+        group user_info[:username]
+        recursive true
+    end
+
+    cookbook_file "/home/#{user_info[:username]}/.pip/pip.conf" do
+      source "pip.conf"
+      mode 0640
+      owner user_info[:username]
+      group user_info[:username]
+      action :create_if_missing
+    end
+
+end
